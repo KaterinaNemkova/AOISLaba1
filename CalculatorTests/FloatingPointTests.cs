@@ -17,7 +17,7 @@ namespace Laba1AOIS.Tests
             float num = 7.25f;
             int expectedSign = 0;
             string expectedExponent = "10000001"; // Двоичное представление числа 129 (127 + 2)
-            string expectedMantissa = "11101";
+            string expectedMantissa = "111010000000000000000000";
 
 
             FloatingPoint floatingPoint = new FloatingPoint(num);
@@ -38,7 +38,7 @@ namespace Laba1AOIS.Tests
          
             int expectedSign = 0;
             List<int> expectedExponent = new List<int> { 1, 0, 0, 0, 0, 0, 0, 1 };
-            List<int> expectedMantissa = new List<int> { 1, 1, 0, 1 };
+            List<int> expectedMantissa = new List<int> { 1, 1, 0, 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
             FloatingPoint floatingPoint = new FloatingPoint(num);
 
             // Act
@@ -76,7 +76,7 @@ namespace Laba1AOIS.Tests
             string printedNumber = CaptureConsoleOutput(() => actualSum.PrintNumber());
 
             // Assert
-            Assert.IsTrue(printedNumber.Contains($"Floating point: 0 | 10000011 | 1101101"));
+            Assert.IsTrue(printedNumber.Contains($"Floating point: 0 | 10000011 | 11011010000000000000000"));
 
             string CaptureConsoleOutput(Action action)
             {

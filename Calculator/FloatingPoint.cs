@@ -96,34 +96,26 @@ namespace Laba1AOIS
         }
         private List<int> CalculateMantissa(List<int> intBinary,List<int> fractBinary)
         {
-            List<int> mantissa = new List<int>();
-            //int maxBits = 23;
+            List<int> mantissa = new List<int>(24);
+            int maxBits = 24;
 
             mantissa.AddRange(intBinary);
 
             // Добавляем дробную часть мантиссы
             mantissa.AddRange(fractBinary);
-
-            // Убираем первую единицу, если она есть
-            //if (mantissa.Count > 0 && mantissa[0] == 1)
-            //{
-            //    mantissa.RemoveAt(0);
-            //}
-            //mantissa.Add(0);
+            while (mantissa.Count != maxBits)
+            {
+                mantissa.Add(0);
+            }
 
             return mantissa;
         }
         public void PrintNumber()
         {
             string mantissaStr = string.Join("", Mantissa);
-            int firstOneIndex = mantissaStr.IndexOf('1');
 
-            // Если первая единица найдена, выводим мантиссу без нее
-            if (firstOneIndex != -1)
-            {
-                mantissaStr = mantissaStr.Substring(firstOneIndex + 1);
-            }
-            Console.WriteLine($"Floating point: {Sign} | {string.Join("", Exponent)} | {string.Join("", mantissaStr)}");
+            // Выводим мантиссу, начиная со второго символа
+            Console.WriteLine($"Floating point: {Sign} | {string.Join("", Exponent)} | {mantissaStr.Substring(1)}");
         }
 
         public FloatingPoint Add(FloatingPoint other)
@@ -146,10 +138,17 @@ namespace Laba1AOIS
             // Выравниваем мантиссы по экспоненте
             
             List<int> alignedMantissaThis = AlignMantissas(this, other, expComparison);
-            List<int> alignedMantissaOther = AlignMantissasRight(this, other, expComparison);
-
+            
+            List<int> resultMantissa = new List<int>(25);
             // Складываем мантиссы
-            List<int> resultMantissa = Binary.SumOfComplement(alignedMantissaThis, alignedMantissaOther);
+            if (expComparison > 0)
+            {
+                resultMantissa = Add(alignedMantissaThis, this.Mantissa);
+            }
+            else
+            {
+                resultMantissa = Add(alignedMantissaThis, other.Mantissa);
+            }
 
             // При необходимости корректируем знак и экспоненту
             if (expComparison < 0)
@@ -162,12 +161,39 @@ namespace Laba1AOIS
                 sum.Sign = this.Sign;
                 sum.Exponent = this.Exponent;
             }
-
+            if (resultMantissa[0] == 1)
+            { 
+                int carry = 1;
+                for (int i = sum.Exponent.Count-1; i>=0; i--)
+                {
+                        sum.Exponent[i] += carry;
+                        carry=sum.Exponent[i] / 2;
+                        sum.Exponent[i] %= 2;
+                   
+                }
+                if (resultMantissa.Count > 24)
+                {
+                    while (resultMantissa.Count > 24)
+                    {
+                       resultMantissa.RemoveAt(resultMantissa.Count - 1);
+                    }
+                }
+                
+            }
+            else
+            {
+                if (resultMantissa.Count > 24)
+                {
+                    while (resultMantissa.Count > 24)
+                    {
+                        resultMantissa.RemoveAt(resultMantissa.Count - 1);
+                    }
+                }
+                resultMantissa.RemoveAt(0);
+            }
+            
             // Обновляем мантиссу результата
             sum.Mantissa = resultMantissa;
-
-            // Нормализуем результат
-            sum.Normalize();
 
             return sum;
         }
@@ -197,13 +223,18 @@ namespace Laba1AOIS
 
         private List<int> AlignMantissas(FloatingPoint target, FloatingPoint source, int expComparison)
         {
-           // List<int> alignedMantissa = new List<int>(target.Mantissa);
-
             if (expComparison > 0)
             {
                 // Если значение target больше, добавляем нули к мантиссе source
                 List<int> alignedMantissa = new List<int>(source.Mantissa);
                 alignedMantissa.InsertRange(0, new int[expComparison]);
+                if (alignedMantissa.Count > 24)
+                {
+                    while (alignedMantissa.Count > 24)
+                    {
+                        alignedMantissa.RemoveAt(alignedMantissa.Count - 1);
+                    }
+                }
                 return alignedMantissa;
             }
             else 
@@ -211,82 +242,49 @@ namespace Laba1AOIS
                 // Если значение source больше, добавляем нули к мантиссе target
                 List<int> alignedMantissa = new List<int>(target.Mantissa);
                 alignedMantissa.InsertRange(0, new int[Math.Abs(expComparison)]);
-                return alignedMantissa;
-            }
-
-            
-        }
-        private List<int> AlignMantissasRight(FloatingPoint target, FloatingPoint source, int expComparison)
-        {
-            // List<int> alignedMantissa = new List<int>(target.Mantissa);
-
-            if (expComparison > 0)
-            {
-                // Если значение target больше, добавляем нули к мантиссе source
-                List<int> alignedMantissa = new List<int>(target.Mantissa);
-                for (int i = 0; i < expComparison; i++)
+                while (alignedMantissa.Count >24)
                 {
-                    alignedMantissa.Add(0);
-                }
-                return alignedMantissa;
-            }
-            else
-            {
-                // Если значение source больше, добавляем нули к мантиссе target
-                List<int> alignedMantissa = new List<int>(source.Mantissa);
-                for (int i = 0; i < Math.Abs(expComparison); i++)
-                {
-                    alignedMantissa.Add(0);
+                    alignedMantissa.RemoveAt(alignedMantissa.Count - 1);
                 }
                 return alignedMantissa;
             }
 
-
         }
-       
-       
-        private void Normalize()
+        public static List<int> Add(List<int> mantissa1, List<int> mantissa2)
         {
-            // Нормализуем результат, обновляя экспоненту и мантиссу при необходимости
-            int index = 0;
-            // Ищем первый ненулевой бит в мантиссе
-            while (index < Mantissa.Count && Mantissa[index] == 0)
+            List<int> result = new List<int>(25);
+            int carry = 0;
+            for (int i = mantissa1.Count-1; i >= 0; --i)
             {
-                index++;
-            }
+                int sum = mantissa1[i] + mantissa2[i] + carry;
 
-            // Если индекс выходит за пределы размера мантиссы, значит число равно нулю
-            if (index == Mantissa.Count)
-            {
-                // Сбрасываем экспоненту
-                Exponent = new List<int>(new int[Exponent.Count]);
-                return;
-            }
-
-            // Обновляем экспоненту, вычитая из нее разницу между текущим индексом и индексом, с которого начинается нормализованная мантисса
-            Exponent = SubtractExponents(Exponent, index);
-
-            // Обрезаем мантиссу, оставляя только нормализованную часть
-            Mantissa = Mantissa.GetRange(index, Mantissa.Count - index);
-        }
-
-        private List<int> SubtractExponents(List<int> exponent, int subtractValue)
-        {
-            List<int> result = new List<int>(exponent);
-            // Вычитаем значение из каждого бита экспоненты
-            for (int i = result.Count - 1; i >= 0 && subtractValue > 0; i--)
-            {
-                if (result[i] == 0)
+                if (sum == 2)
                 {
-                    result[i] = 1;
-                    subtractValue--;
+                    
+                    carry = 1;
+                    result.Insert(0, 0);
+                }
+                else if (sum == 3)
+                {
+                    carry = 1;
+                    result.Insert(0, 1);
                 }
                 else
                 {
-                    result[i] = 0;
+                    carry = 0;
+                    result.Insert(0, sum);
                 }
             }
-            return result;
+            if (carry == 1)
+            {
+                result.Insert(0, 1);
+            }
+            else
+            {
+                result.Insert(0, 0);
+            }
+           
+                return result;
         }
     }
 }
