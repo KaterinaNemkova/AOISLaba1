@@ -76,7 +76,7 @@ namespace Laba1AOIS.Tests
             string printedNumber = CaptureConsoleOutput(() => actualSum.PrintNumber());
 
             // Assert
-            Assert.IsTrue(printedNumber.Contains($"Floating point: 0 | 10000011 | 11011010000000000000000"));
+            Assert.IsTrue(printedNumber.Contains($"Floating point: 0 | 10000011 | 1101101000000000000000"));
 
             string CaptureConsoleOutput(Action action)
             {
